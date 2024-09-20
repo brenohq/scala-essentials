@@ -28,6 +28,7 @@ abstract class MyList[+A] {
   // more hofs
   def foreach(f: A => Unit): Unit
   def sort(compare: (A, A) => Int): MyList[A]
+  def zipWith[B, C](list: MyList[B], f: (A, B) => C): MyList[C]
 }
 
 object Empty extends MyList[Nothing] {
@@ -45,6 +46,10 @@ object Empty extends MyList[Nothing] {
 
   override def foreach(f: Nothing => Unit): Unit = ()
   override def sort(compare: (Nothing, Nothing) => Int): MyList[Nothing] = Empty
+
+  override def zipWith[B, C](list: MyList[B], f: (Nothing, B) => C): MyList[C] =
+    if (!list.isEmpty) throw new RuntimeException("Lists do not have the same length")
+    else Empty
 }
 
 class Cons[+A](h: A, t: MyList[A]) extends MyList[A] {
@@ -82,6 +87,10 @@ class Cons[+A](h: A, t: MyList[A]) extends MyList[A] {
     val sortedTail = t.sort(compare)
     insert(h, sortedTail)
   }
+
+  override def zipWith[B, C](list: MyList[B], zip: (A, B) => C): MyList[C] =
+    if (list.isEmpty) throw new RuntimeException("Lists do not have the same length")
+    else new Cons(zip(h, list.head), t.zipWith(list.tail, zip))
 }
 
 object ListTest extends App {
@@ -103,6 +112,6 @@ object ListTest extends App {
   println(cloneListOfIntegers == listOfIntegers)
 
   listOfIntegers.foreach(println)
-
   println(listOfIntegers.sort((x, y) => y - x))
+  println(anotherListOfIntegers.zipWith[String, String](listOfStrings, _ + "-" + _))
 }
